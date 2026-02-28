@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ClarityPulse | Workspace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-main: #1a1a1a; --bg-card: #282828; --text-main: #ffffff; --text-muted: #8c8c8c; --accent: #ffa116; --accent-hover: #e58f14; --border: #333333; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        .navbar { height: 60px; background-color: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 24px; position: fixed; width: 100%; box-sizing: border-box; z-index: 1000; }
+        .logo { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+        .nav-right { display: flex; align-items: center; gap: 20px; }
+        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 16px; border-radius: 6px; cursor: pointer; text-decoration: none; font-weight: 500; transition: 0.2s; }
+        .logout-btn:hover { color: #fff; border-color: #fff; }
+
+        .layout { display: flex; margin-top: 60px; height: calc(100vh - 60px); width: 100%; }
+
+        .sidebar { width: 250px; background-color: var(--bg-card); border-right: 1px solid var(--border); padding: 20px 0; display: flex; flex-direction: column; }
+        .menu-item { padding: 14px 24px; color: var(--text-muted); cursor: pointer; font-weight: 500; transition: 0.2s; border-left: 3px solid transparent; }
+        .menu-item:hover, .menu-item.active { background-color: rgba(255, 161, 22, 0.1); color: var(--accent); border-left-color: var(--accent); }
+
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .section { display: none; max-width: 900px; margin: 0 auto; }
+        .section.active { display: block; }
+
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 25px; margin-bottom: 20px; }
+        .card-title { margin-top: 0; font-size: 1.3rem; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+
+        .chat-box { height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; padding-right: 10px; }
+        .msg { max-width: 80%; padding: 14px 18px; border-radius: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .msg.bot { background-color: #333; align-self: flex-start; }
+        .msg.user { background-color: rgba(255, 161, 22, 0.15); align-self: flex-end; border: 1px solid rgba(255, 161, 22, 0.3); color: var(--accent); }
+
+        .input-group { display: flex; gap: 10px; }
+        input, textarea, select { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid var(--border); border-radius: 6px; color: white; font-family: 'Inter', sans-serif; box-sizing: border-box; margin-bottom: 15px; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); }
+        .btn { background-color: var(--accent); color: #000; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn:hover { background-color: var(--accent-hover); }
+
+        .expert-card { background: #1a1a1a; padding: 15px 20px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .role-badge { background: rgba(255, 161, 22, 0.2); color: var(--accent); padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--accent); }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <div class="logo">ClarityPulse</div>
+    <div class="nav-right">
+        <span id="navUserName" style="font-weight: 500;"></span>
+        <form action="/logout" method="post" style="margin:0;">
+            <button type="submit" class="logout-btn">Logout</button>
+        </form>
+    </div>
+</div>
+
+<div class="layout">
+    <div class="sidebar">
+        <div class="menu-item active" onclick="switchTab('chat')" id="tab-chat">AI Copilot</div>
+        <div class="menu-item" onclick="switchTab('experts')" id="tab-experts">Expert Network</div>
+        <div class="menu-item" onclick="switchTab('vault')" id="tab-vault">Idea Vault</div>
+        <div class="menu-item" onclick="switchTab('security')" id="tab-security">IP Scanner</div>
+        <div class="menu-item" onclick="switchTab('profile')" id="tab-profile">My Profile</div>
+    </div>
+
+    <div class="main-content">
+        <div class="section active" id="sec-chat">
+            <div class="card">
+                <h2 class="card-title">AI Venture Assistant</h2>
+                <div class="chat-box" id="chatBox">
+                    <div class="msg bot">System Online. Describe your startup idea or ask a business question.</div>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="chatInput" placeholder="Initialize query..." onkeypress="handleEnter(event, 'chat')">
+                    <button class="btn" onclick="sendChat()">Run</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="sec-experts">
+            <div class="card">
+                <h2 class="card-title">Live Network</h2>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">Real users registered as domain experts.</p>
+                <div id="expertList"></div>
+            </div>
+        </div>
+
+        <div class="section" id="sec-vault">
+            <div class="card">
+                <h2 class="card-title">Idea Vault</h2>
+                <div id="vaultList"></div>
+            </div>
+        </div>
+
+        <div class="section" id="sec-security">
+            <div class="card">
+                <h2 class="card-title" style="color: #ff4b4b; border-bottom-color: #ff4b4b;">Plagiarism Scanner</h2>
+                <div class="chat-box" id="secBox" style="height: 30vh;">
+                    <div class="msg bot">Cross-reference new ideas against the secured database.</div>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="secInput" placeholder="Enter idea..." onkeypress="handleEnter(event, 'security')">
+                    <button class="btn" style="background: #ff4b4b; color: white;" onclick="sendSecurity()">Scan</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="sec-profile">
+            <div class="card">
+                <h2 class="card-title">Account Settings</h2>
+                <label style="color: var(--text-muted); font-size: 0.9rem;">Display Name</label>
+                <input type="text" id="profName">
+
+                <label style="color: var(--text-muted); font-size: 0.9rem;">Industry Domain</label>
+                <input type="text" id="profDomain" placeholder="e.g., DeepTech, SaaS, Web3">
+
+                <label style="color: var(--text-muted); font-size: 0.9rem;">Platform Role</label>
+                <select id="profRole">
+                    <option value="ENTREPRENEUR">Entrepreneur (Building ideas)</option>
+                    <option value="EXPERT">Industry Expert (Reviewing ideas)</option>
+                </select>
+
+                <label style="color: var(--text-muted); font-size: 0.9rem;">Bio</label>
+                <textarea id="profBio" rows="4"></textarea>
+
+                <button class="btn" onclick="saveProfile()">Update Profile</button>
+                <div id="profStatus" style="margin-top: 15px; color: var(--accent);"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/api/user').then(res => res.json()).then(data => {
+            if(data.name) {
+                document.getElementById('navUserName').innerText = data.name;
+                loadProfileData();
+            } else {
+                window.location.href = '/login.html';
+            }
+        });
+    });
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        document.getElementById('sec-' + tabId).classList.add('active');
+
+        if(tabId === 'experts') loadExperts();
+        if(tabId === 'vault') loadVault();
+    }
+
+    function handleEnter(e, context) {
+        if(e.key === 'Enter') context === 'chat' ? sendChat() : sendSecurity();
+    }
+
+    function appendMsg(boxId, text, type, id=null) {
+        const box = document.getElementById(boxId);
+        const div = document.createElement('div');
+        div.className = `msg ${type}`;
+        div.innerText = text;
+        if(id) div.id = id;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function sendChat() {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if(!text) return;
+        appendMsg('chatBox', text, 'user');
+        input.value = '';
+
+        const loadId = 'load-' + Date.now();
+        appendMsg('chatBox', 'Computing...', 'bot', loadId);
+
+        fetch('/api/chat', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text })
+        }).then(r => r.json()).then(d => {
+            document.getElementById(loadId).remove();
+            appendMsg('chatBox', d.reply, 'bot');
+        });
+    }
+
+    function sendSecurity() {
+        const input = document.getElementById('secInput');
+        const text = input.value.trim();
+        if(!text) return;
+        appendMsg('secBox', text, 'user');
+        input.value = '';
+
+        const loadId = 'load-' + Date.now();
+        appendMsg('secBox', 'Scanning vectors...', 'bot', loadId);
+
+        fetch('/api/security/check', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idea: text })
+        }).then(r => r.json()).then(d => {
+            document.getElementById(loadId).remove();
+            appendMsg('secBox', d.report, 'bot');
+        });
+    }
+
+    function loadExperts() {
+        const list = document.getElementById('expertList');
+        list.innerHTML = '<div style="color: #8c8c8c;">Fetching network...</div>';
+        fetch('/api/experts').then(r => r.json()).then(data => {
+            list.innerHTML = '';
+            if(data.length === 0) {
+                list.innerHTML = '<div style="color: #8c8c8c;">No experts currently registered. Become the first by updating your profile!</div>';
+                return;
+            }
+            data.forEach(e => {
+                list.innerHTML += `
+                    <div class="expert-card">
+                        <div>
+                            <div style="font-weight:600; font-size:1.1rem; color: #fff;">${e.fullName}</div>
+                            <div style="color: var(--text-muted); font-size:0.9rem; margin-top:4px;">${e.domain || 'Domain not specified'} • ${e.bio || 'No bio provided'}</div>
+                        </div>
+                        <div class="role-badge">Verified Expert</div>
+                    </div>
+                `;
+            });
+        });
+    }
+
+    function loadVault() {
+        const list = document.getElementById('vaultList');
+        fetch('/api/chat/vault').then(r => r.json()).then(data => {
+            if(data.length === 0) {
+                list.innerHTML = '<div style="color: #8c8c8c;">Vault is empty.</div>';
+                return;
+            }
+            list.innerHTML = '';
+            data.forEach(d => {
+                list.innerHTML += `
+                    <div style="padding: 15px; border-left: 3px solid var(--accent); background: #1a1a1a; margin-bottom: 15px;">
+                        <strong style="color: #fff;">Query:</strong> <span style="color: #ccc;">${d.userQuery}</span><br>
+                        <small style="color: var(--text-muted);">${new Date(d.createdAt).toLocaleString()}</small>
+                    </div>
+                `;
+            });
+        });
+    }
+
+    function loadProfileData() {
+        fetch('/api/profile').then(r => r.json()).then(data => {
+            document.getElementById('profName').value = data.fullName || '';
+            document.getElementById('profDomain').value = data.domain || '';
+            document.getElementById('profRole').value = data.role || 'ENTREPRENEUR';
+            document.getElementById('profBio').value = data.bio || '';
+        });
+    }
+
+    function saveProfile() {
+        const profileData = {
+            fullName: document.getElementById('profName').value,
+            domain: document.getElementById('profDomain').value,
+            role: document.getElementById('profRole').value,
+            bio: document.getElementById('profBio').value
+        };
+
+        fetch('/api/profile', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profileData)
+        }).then(r => r.json()).then(data => {
+            document.getElementById('profStatus').innerText = 'System updated.';
+            setTimeout(() => document.getElementById('profStatus').innerText = '', 3000);
+            if(data.fullName) document.getElementById('navUserName').innerText = data.fullName;
+        });
+    }
+</script>
+</body>
+</html>
